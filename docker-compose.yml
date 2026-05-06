@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15
+    container_name: delivery_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend # path to your backend repo folder
+      dockerfile: Dockerfile
+    container_name: delivery_backend
+    restart: always
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy # wait for postgres to be ready before starting
+    volumes:
+      - ../backend/src:/app/src # hot reload — reflects code changes without rebuild
+
+  frontend:
+    build:
+      context: ../frontend # path to your frontend repo folder
+      dockerfile: Dockerfile
+    container_name: delivery_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
