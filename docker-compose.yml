@@ -19,7 +19,7 @@ services:
 
   backend:
     build:
-      context: ../backend # path to your backend repo folder
+      context: ../delivery-api
       dockerfile: Dockerfile
     container_name: delivery_backend
     restart: always
@@ -31,13 +31,13 @@ services:
       - "3000:3000"
     depends_on:
       db:
-        condition: service_healthy # wait for postgres to be ready before starting
+        condition: service_healthy
     volumes:
-      - ../backend/src:/app/src # hot reload — reflects code changes without rebuild
+      - ../delivery-api/src:/app/src
 
   frontend:
     build:
-      context: ../frontend # path to your frontend repo folder
+      context: ../delivery-web
       dockerfile: Dockerfile
     container_name: delivery_frontend
     restart: always
